@@ -6,9 +6,11 @@
 package controle_visao;
 
 import dao.HorarioDAO;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
-
+import modelo.Horario;
 /**
  *
  * @author Note-Claudio
@@ -18,9 +20,10 @@ public class HorarioFrm extends javax.swing.JFrame {
     /**
      * Creates new form HorarioFrm
      */
+    HorarioDAO horDAO;
     public HorarioFrm() throws Exception {
         initComponents();
-        HorarioDAO horDAO = new HorarioDAO();
+        horDAO = new HorarioDAO();
         horarioList = horDAO.getLista();
         controlarEdicao(false);
         atualizaTabela();
@@ -32,20 +35,21 @@ public class HorarioFrm extends javax.swing.JFrame {
         jbSalvar.setEnabled(editando);
         jbConsultar.setEnabled(!editando);
         jbCancelar.setEnabled(editando);
-        if(!jbNovo.isEnabled() && jtfIdEmpresa.getText().isEmpty()){
+        if(!jbNovo.isEnabled() && jtfIdHorario.getText().isEmpty()){
             jbExcluir.setEnabled(!editando);
         }else{
             jbExcluir.setEnabled(editando);
         }
         
         //campos de texto
-        jtfIdEmpresa.setEnabled(!editando);
+        jtfIdHorario.setEnabled(!editando);
         jtfHoraChegada.setEnabled(editando);
-        jtfHoraChegada.setEditable(editando);
+        jtfHoraSaida.setEnabled(editando);
+        jcbTipo.setEnabled(editando);
     }
     
     private void limparFormulario(){
-        jtfIdEmpresa.setText(null);
+        jtfIdHorario.setText(null);
         jtfHoraChegada.setText(null);
     }
     
@@ -57,9 +61,11 @@ public class HorarioFrm extends javax.swing.JFrame {
 }
     Object[] colunas = new Object[tabela.getColumnCount()];
     
-    for(Empresa cid : empresaList){
-        colunas[0] = cid.getIdEmpresa();
-        colunas[1] = cid.getNome();
+    for(Horario cid : horarioList){
+        colunas[0] = cid.getIdHorario();
+        colunas[1] = cid.getHoraChegada();
+        colunas[2] = cid.getHoraSaida();
+        colunas[3] = cid.getTipo();
         
         tabela.addRow(colunas);
     }
@@ -79,11 +85,11 @@ public class HorarioFrm extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        horarioList = java.beans.Beans.isDesignTime() ? java.util.Collections.emptyList() : ((javax.persistence.Query)null).getResultList();
+       
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jtfIdEmpresa = new javax.swing.JTextField();
+        jtfIdHorario = new javax.swing.JTextField();
         jtfHoraChegada = new javax.swing.JTextField();
         jbConsultar = new javax.swing.JButton();
         jLabel3 = new javax.swing.JLabel();
@@ -118,6 +124,11 @@ public class HorarioFrm extends javax.swing.JFrame {
         jLabel4.setText("Tipo:");
 
         jcbTipo.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
+        jcbTipo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jcbTipoActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -133,7 +144,7 @@ public class HorarioFrm extends javax.swing.JFrame {
                 .addGap(18, 18, 18)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jtfIdEmpresa, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(jtfIdHorario, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(jbConsultar, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE))
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
@@ -150,7 +161,7 @@ public class HorarioFrm extends javax.swing.JFrame {
                         .addContainerGap()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                             .addComponent(jLabel1)
-                            .addComponent(jtfIdEmpresa, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addComponent(jtfIdHorario, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
                     .addComponent(jbConsultar))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -273,15 +284,15 @@ public class HorarioFrm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jbConsultarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbConsultarActionPerformed
-        if(jtfIdEmpresa.getText().isEmpty()){
-            JOptionPane.showMessageDialog(rootPane, "Você deve digitar o código da empresa no campo código.", null, JOptionPane.INFORMATION_MESSAGE);
+        if(jtfIdHorario.getText().isEmpty()){
+            JOptionPane.showMessageDialog(rootPane, "Você deve digitar o código do horario no campo código.", null, JOptionPane.INFORMATION_MESSAGE);
         }else{
-            Empresa emp = empDAO.getEmpresaById(Integer.parseInt(jtfIdEmpresa.getText()));
-            if(emp == null){
-                JOptionPane.showMessageDialog(rootPane, "Empresa não localizada.", null, JOptionPane.INFORMATION_MESSAGE);
+            Horario hor = horDAO.getHorarioById(Integer.parseInt(jtfIdHorario.getText()));
+            if(hor == null){
+                JOptionPane.showMessageDialog(rootPane, "Horario não localizado.", null, JOptionPane.INFORMATION_MESSAGE);
             }else{
                 controlarEdicao(true);
-                jtfHoraChegada.setText(emp.getNome());
+                jtfHoraChegada.setText(hor.getHoraChegada());
             }
         }
     }//GEN-LAST:event_jbConsultarActionPerformed
@@ -298,23 +309,23 @@ public class HorarioFrm extends javax.swing.JFrame {
                 null,
                 JOptionPane.INFORMATION_MESSAGE);
         }else{
-            Empresa emp = new Empresa();
-            if(!jtfIdEmpresa.getText().isEmpty()){
-                emp.setIdEmpresa(Integer.parseInt(jtfIdEmpresa.getText()));
+            Horario hor = new Horario();
+            if(!jtfIdHorario.getText().isEmpty()){
+                hor.setIdHorario(Integer.parseInt(jtfIdHorario.getText()));
             }
-            emp.setNome(jtfHoraChegada.getText());
-            if(empDAO.salvar(emp)){
+            hor.setTipo(jtfHoraChegada.getText());
+            if(horDAO.salvar(hor)){
                 JOptionPane.showMessageDialog(rootPane,
-                    "Empresa salva com sucesso.",
+                    "Horario salvo com sucesso.",
                     null,
                     JOptionPane.INFORMATION_MESSAGE);
                 controlarEdicao(false);
-                empresaList.clear();
-                empresaList.addAll(empDAO.getLista());
+                horarioList.clear();
+                horarioList.addAll(horDAO.getLista());
 
             }else{
                 JOptionPane.showMessageDialog(rootPane,
-                    "Erro ao tentar cadastrar a empresa.",
+                    "Erro ao tentar cadastrar o horário.",
                     null,
                     JOptionPane.ERROR_MESSAGE);
             }
@@ -326,22 +337,26 @@ public class HorarioFrm extends javax.swing.JFrame {
     private void jbCancelarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbCancelarActionPerformed
         jtHorario.getSelectionModel().clearSelection();
         controlarEdicao(false);
-        jtfIdEmpresa.requestFocus();
+        jtfIdHorario.requestFocus();
         limparFormulario();
     }//GEN-LAST:event_jbCancelarActionPerformed
 
     private void jbExcluirActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jbExcluirActionPerformed
-        if(JOptionPane.showConfirmDialog(rootPane, "Você têm certeza que deseja excluir esta empresa?", null, JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE) == 0){
-            if(!(empDAO.excluir(Integer.parseInt(jtfIdEmpresa.getText())))){
-                JOptionPane.showMessageDialog(rootPane, "Não foi possível excluir a empresa. Por favor, contate o administrador.", null, JOptionPane.ERROR_MESSAGE);
+        if(JOptionPane.showConfirmDialog(rootPane, "Você têm certeza que deseja excluir este horário?", null, JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE) == 0){
+            if(!(horDAO.excluir(Integer.parseInt(jtfIdHorario.getText())))){
+                JOptionPane.showMessageDialog(rootPane, "Não foi possível excluir o horário.", null, JOptionPane.ERROR_MESSAGE);
             }else{
                 controlarEdicao(false);
-                empresaList.clear();
-                empresaList.addAll(empDAO.getLista());
+                horarioList.clear();
+                horarioList.addAll(horDAO.getLista());
                 atualizaTabela();
             }
         }
     }//GEN-LAST:event_jbExcluirActionPerformed
+
+    private void jcbTipoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jcbTipoActionPerformed
+        
+    }//GEN-LAST:event_jcbTipoActionPerformed
 
     /**
      * @param args the command line arguments
@@ -373,13 +388,17 @@ public class HorarioFrm extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new HorarioFrm().setVisible(true);
+                try {
+                    new HorarioFrm().setVisible(true);
+                } catch (Exception ex) {
+                    Logger.getLogger(HorarioFrm.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private java.util.List horarioList;
+    private java.util.List<Horario> horarioList;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
@@ -396,6 +415,6 @@ public class HorarioFrm extends javax.swing.JFrame {
     private javax.swing.JTable jtHorario;
     private javax.swing.JTextField jtfHoraChegada;
     private javax.swing.JTextField jtfHoraSaida;
-    private javax.swing.JTextField jtfIdEmpresa;
+    private javax.swing.JTextField jtfIdHorario;
     // End of variables declaration//GEN-END:variables
 }
